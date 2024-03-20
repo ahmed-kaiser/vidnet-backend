@@ -266,16 +266,21 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All fields are required");
   }
 
-  const updatedUser = await User.findByIdAndUpdate(
-    req.user?._id,
-    {
-      $set: { fullName, email },
-    },
-    { new: true }
-  ).select("-password -refreshToken");
-
-  if (!updatedUser) {
-    throw new ApiError(500, "Server error");
+  let updatedUser;
+  try {
+    updatedUser = await User.findByIdAndUpdate(
+      req.user?._id,
+      {
+        $set: { fullName, email },
+      },
+      { new: true }
+    ).select("-password -refreshToken");
+  } catch (error) {
+    if (error.codeName === "DuplicateKey" && "email" in error.keyPattern) {
+      throw new ApiError(400, "Email already exist");
+    } else {
+      throw new ApiError(500, "Server error");
+    }
   }
 
   return res
