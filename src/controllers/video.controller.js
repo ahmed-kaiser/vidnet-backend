@@ -145,7 +145,13 @@ const updateVideo = asyncHandler(async (req, res) => {
 
   res
     .status(200)
-    .json(200, { video: updateVideo }, "Video file updated successfully");
+    .json(
+      new ApiResponse(
+        200,
+        { video: updateVideo },
+        "Video file updated successfully"
+      )
+    );
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {
@@ -169,7 +175,9 @@ const deleteVideo = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Failed to delete video");
   }
 
-  return res.status(200).json(200, {}, "Video deleted successfully");
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Video deleted successfully"));
 });
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
@@ -187,9 +195,11 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(
-      200,
-      { video: updateVideo },
-      "Update video published state successfully"
+      new ApiResponse(
+        200,
+        { video: updateVideo },
+        "Update video published state successfully"
+      )
     );
 });
 
