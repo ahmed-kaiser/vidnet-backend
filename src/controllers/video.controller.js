@@ -14,8 +14,12 @@ const getAllVideos = asyncHandler(async (req, res) => {
 const publishAVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
 
-  if (!title.trim() && !description.trim()) {
-    throw new ApiError(400, "All data information is required");
+  if (title.trim() === "") {
+    throw new ApiError(400, "Title is required");
+  }
+
+  if (description.trim() === "") {
+    throw new ApiError(400, "Description is required");
   }
 
   const videoFileLocalPath = req.files?.videoFile[0]?.path;
@@ -58,12 +62,26 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .json(new ApiResponse(200, video, "Video published successfully"));
+    .json(new ApiResponse(200, { video }, "Video published successfully"));
 });
 
 const getVideoById = asyncHandler(async (req, res) => {
   const { videoId } = req.params;
-  //TODO: get video by id
+
+  let video;
+  try {
+    video = await Video.findById(videoId);
+  } catch (error) {
+    throw new ApiError(500, "Server error");
+  }
+
+  if (!video) {
+    throw new ApiError(400, "Video does not exist");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { video }, "Video found successfully"));
 });
 
 const updateVideo = asyncHandler(async (req, res) => {
