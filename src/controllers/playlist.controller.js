@@ -30,11 +30,63 @@ const createPlaylist = asyncHandler(async (req, res) => {
 
 const getUserPlaylists = asyncHandler(async (req, res) => {
   const { userId } = req.params;
-  //TODO: get user playlists
+
+  if (!isValidObjectId(userId)) {
+    throw new ApiError(400, "Invalid user ID");
+  }
+
+  const filter =
+    req.user._id === userId
+      ? { _id: userId, visibility: "Public" }
+      : { _id: userId };
+
+  let playlists;
+  try {
+    playlists = await Playlist.find({ ...filter });
+  } catch (error) {
+    throw new ApiError(500, "Server error");
+  }
+
+  if (!playlists || playlists.length < 1) {
+    throw new ApiError(404, "Playlists not found");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, { playlists }, "Playlists fetched successfully")
+    );
 });
 
 const getPlaylistById = asyncHandler(async (req, res) => {
   const { playlistId } = req.params;
+
+  if (!isValidObjectId(playlistId)) {
+    throw new ApiError(400, "Invalid playlist ID");
+  }
+
+  let playlist;
+  try {
+    playlist = await Playlist.findById(playlistId);
+  } catch (error) {
+    throw new ApiError(500, "Server error");
+  }
+
+  if (!playlist) {
+    throw new ApiError(404, "Playlist not found");
+  }
+
+  if (
+    playlist &&
+    playlist.owner !== req.user._id &&
+    playlist.visibility === "Private"
+  ) {
+    throw new ApiError(401, "Unauthorize request");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, { playlist }, "Playlist fetched successfully"));
 });
 
 const addVideoToPlaylist = asyncHandler(async (req, res) => {
